@@ -92,7 +92,7 @@ function Header() {
                   href="#"
                   className="block py-2 px-3 text-white rounded hover:bg-gray-700 md:hover:bg-transparent md:hover:text-blue-500 md:p-0"
                 >
-                  Фільми
+                  Зараз у кіно
                 </a>
               </li>
               <li>
@@ -100,15 +100,7 @@ function Header() {
                   href="#"
                   className="block py-2 px-3 text-white rounded hover:bg-gray-700 md:hover:bg-transparent md:hover:text-blue-500 md:p-0"
                 >
-                  Серіали
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="block py-2 px-3 text-white rounded hover:bg-gray-700 md:hover:bg-transparent md:hover:text-blue-500 md:p-0"
-                >
-                  Контакти
+                  Скоро у кіно
                 </a>
               </li>
             </ul>

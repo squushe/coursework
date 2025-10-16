@@ -49,10 +49,6 @@ function HomePage() {
 
   return (
     <main className="container mx-auto p-4 flex-grow">
-      <h2 className="text-3xl font-bold mb-8 text-center text-white">
-        Популярні фільми
-      </h2>
-
       {/* Multi-slide карусель */}
       <div
         id="multi-slide-carousel"
