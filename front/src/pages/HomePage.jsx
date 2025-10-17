@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
-import { initFlowbite } from "flowbite"; // Імпортуємо функцію ініціалізації
+import { initFlowbite } from "flowbite";
 
-// Зверніть увагу: SVG атрибути з дефісом (stroke-linecap) потрібно перетворити на camelCase (strokeLinecap)
 function PrevIcon() {
   return (
     <svg
