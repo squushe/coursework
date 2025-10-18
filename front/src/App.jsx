@@ -41,16 +41,29 @@
 
 //------------------------------------------ page booking ticket ------------------------------------------
 
+// import React from "react";
+// import BookingPage from "./pages/BookingPage";
+
+// function App() {
+//   return (
+//     <div className="bg-slate-900 text-white flex flex-col min-h-screen">
+//       <BookingPage />
+//     </div>
+//   );
+// }
+
+// export default App;
+//-------------------------------------------------------------------------------------
+//-------------- my ticket ---------------------------------
 import React from "react";
-import BookingPage from "./pages/BookingPage";
+import MyTicketsPage from "./pages/MyTicketsPage";
 
 function App() {
   return (
     <div className="bg-slate-900 text-white flex flex-col min-h-screen">
-      <BookingPage />
+      <MyTicketsPage />
     </div>
   );
 }
 
 export default App;
-//-------------------------------------------------------------------------------------
