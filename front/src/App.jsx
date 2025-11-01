@@ -55,15 +55,24 @@
 // export default App;
 //-------------------------------------------------------------------------------------
 //-------------- my ticket ---------------------------------
-import React from "react";
-import MyTicketsPage from "./pages/MyTicketsPage";
+// import React from "react";
+// import MyTicketsPage from "./pages/MyTicketsPage";
 
-function App() {
+// function App() {
+//   return (
+//     <div className="bg-slate-900 text-white flex flex-col min-h-screen">
+//       <MyTicketsPage />
+//     </div>
+//   );
+// }
+
+// export default App;
+import React from "react";
+import TicketConfirmationPage from "./pages/TicketConfirmationPage"; // Імпортуємо ваш компонент
+
+export default function App() {
   return (
-    <div className="bg-slate-900 text-white flex flex-col min-h-screen">
-      <MyTicketsPage />
-    </div>
+    // Рендеримо ваш компонент, щоб побачити його
+    <TicketConfirmationPage />
   );
 }
-
-export default App;
