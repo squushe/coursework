@@ -67,12 +67,20 @@
 // }
 
 // export default App;
-import React from "react";
-import TicketConfirmationPage from "./pages/TicketConfirmationPage"; // Імпортуємо ваш компонент
+//---------------Куплений квиток-------------
+// import React from "react";
+// import TicketConfirmationPage from "./pages/TicketConfirmationPage";
 
-export default function App() {
-  return (
-    // Рендеримо ваш компонент, щоб побачити його
-    <TicketConfirmationPage />
-  );
+// export default function App() {
+//   return <TicketConfirmationPage />;
+// }
+//------------------------------
+import React from "react";
+import AuthPage from "./pages/AuthPage"; // Імпортуємо вашу нову сторінку
+import "./index.css"; // Переконайтесь, що стилі Tailwind підключені
+
+function App() {
+  return <AuthPage />;
 }
+
+export default App;

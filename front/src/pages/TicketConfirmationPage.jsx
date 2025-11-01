@@ -1,6 +1,5 @@
 import React from "react";
 
-// --- Іконки для деталей квитка (можна винести в окремий файл) ---
 const CalendarIcon = () => (
   <svg
     className="w-5 h-5 mr-3 text-gray-400"
@@ -74,8 +73,6 @@ const ChairIcon = () => (
 
 // --- Основний компонент сторінки ---
 function TicketConfirmationPage() {
-  // Приклад даних квитка. В реальному додатку ці дані будуть приходити
-  // з сервера або стану після успішної оплати.
   const purchasedTicket = {
     movieTitle: "Дюна: Частина друга",
     posterUrl: "https://placehold.co/200x300/1a202c/ffffff?text=Dune+2",
@@ -136,7 +133,6 @@ function TicketConfirmationPage() {
           </div>
         </div>
 
-        {/* --- "ВІДРИВНИЙ" КОРІНЕЦЬ З QR-КОДОМ (ПРАВА ЧАСТИНА) --- */}
         <div className="bg-gray-900 md:border-l-2 border-dashed border-gray-600 p-8 flex flex-col items-center justify-center min-w-[250px]">
           <h3 className="text-lg font-bold mb-4">Покажіть на вході</h3>
           <div className="bg-white p-2 rounded-lg">
