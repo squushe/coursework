@@ -76,8 +76,8 @@
 // }
 //------------------------------
 import React from "react";
-import AuthPage from "./pages/AuthPage"; // Імпортуємо вашу нову сторінку
-import "./index.css"; // Переконайтесь, що стилі Tailwind підключені
+import AuthPage from "./pages/AuthPage";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return <AuthPage />;
