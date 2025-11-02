@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { registerUser, loginUser } from "../components/Api";
 
 const UserIcon = () => (
   <svg
@@ -51,54 +52,63 @@ const LockIcon = () => (
 
 function AuthPage() {
   const [authMode, setAuthMode] = useState("login");
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
-
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Функція для перемикання між формами
   const switchAuthMode = () => {
     setAuthMode(authMode === "login" ? "register" : "login");
     setFormData({ name: "", email: "", password: "" });
     setMessage("");
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Запобігає перезавантаженню сторінки
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage("");
 
-    if (authMode === "login") {
-      if (!formData.email || !formData.password) {
-        setMessage("Будь ласка, заповніть усі поля для входу.");
-        return;
+    try {
+      if (authMode === "login") {
+        if (!formData.email || !formData.password) {
+          throw new Error("Будь ласка, заповніть усі поля для входу.");
+        }
+
+        const credentials = {
+          email: formData.email,
+          password: formData.password,
+        };
+        const data = await loginUser(credentials);
+
+        console.log("Успішний вхід:", data);
+        setMessage(data.message);
+        // TODO: Зберегти дані користувача (data) і перенаправити на головну сторінку
+      } else {
+        if (!formData.name || !formData.email || !formData.password) {
+          throw new Error("Будь ласка, заповніть усі поля для реєстрації.");
+        }
+
+        const data = await registerUser(formData);
+
+        console.log("Успішна реєстрація:", data);
+        setMessage("Реєстрація успішна! Тепер ви можете увійти.");
+        setTimeout(() => {
+          switchAuthMode();
+        }, 2000);
       }
-      console.log("Відправка даних для входу:", {
-        email: formData.email,
-        password: formData.password,
-      });
-      // TODO: Тут буде код для відправки запиту на бекенд
-      // POST /api/auth/login
-      setMessage("Успішний вхід!"); // Тимчасове повідомлення
-    } else {
-      if (!formData.name || !formData.email || !formData.password) {
-        setMessage("Будь ласка, заповніть усі поля для реєстрації.");
-        return;
-      }
-      console.log("Відправка даних для реєстрації:", formData);
-      // TODO: Тут буде код для відправки запиту на бекенд
-      // POST /api/auth/register
-      setMessage("Реєстрація успішна! Тепер ви можете увійти."); // Тимчасове повідомлення
+    } catch (error) {
+      console.error("Помилка автентифікації:", error.message);
+      setMessage(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -159,13 +169,26 @@ function AuthPage() {
             />
           </div>
 
-          {message && <p className="text-center text-yellow-400">{message}</p>}
+          {message && (
+            <p
+              className={`text-center ${
+                message.includes("успіш") ? "text-green-400" : "text-yellow-400"
+              }`}
+            >
+              {message}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition-colors"
+            disabled={isLoading}
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition-colors disabled:bg-indigo-400 disabled:cursor-not-allowed"
           >
-            {authMode === "login" ? "Увійти" : "Зареєструватися"}
+            {isLoading
+              ? "Завантаження..."
+              : authMode === "login"
+              ? "Увійти"
+              : "Зареєструватися"}
           </button>
         </form>
 
