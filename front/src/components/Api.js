@@ -60,3 +60,21 @@ export const getAllMovies = async () => {
     throw error;
   }
 };
+export const getMovieById = async (movieId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/movies/${movieId}`);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || "Не вдалося завантажити дані фільму"
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("API Error (getMovieById):", error);
+    throw error;
+  }
+};
