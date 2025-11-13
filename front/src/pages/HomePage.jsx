@@ -1,5 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { initFlowbite } from "flowbite";
+import { getAllMovies } from "../components/api";
 
 function PrevIcon() {
   return (
@@ -42,145 +44,104 @@ function NextIcon() {
 }
 
 function HomePage() {
+  const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    initFlowbite();
+    const fetchMovies = async () => {
+      try {
+        const data = await getAllMovies();
+        setMovies(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMovies();
   }, []);
+
+  useEffect(() => {
+    if (movies.length > 0) {
+      initFlowbite();
+    }
+  }, [movies]);
+
+  const movieChunks = [];
+  const chunkSize = 3;
+  for (let i = 0; i < movies.length; i += chunkSize) {
+    movieChunks.push(movies.slice(i, i + chunkSize));
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center text-2xl p-10">Завантаження фільмів...</div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="text-center text-2xl text-red-500 p-10">
+        Помилка: {error}
+      </div>
+    );
+  }
 
   return (
     <main className="container mx-auto p-4 flex-grow">
-      {/* Multi-slide карусель */}
+      <h1 className="text-4xl font-bold mb-8 text-center">Зараз у кіно</h1>
+
       <div
         id="multi-slide-carousel"
         className="relative w-full"
         data-carousel="static"
       >
-        {/* Carousel wrapper */}
         <div className="relative h-[500px] overflow-hidden rounded-lg">
-          {/* Slide/Page 1 */}
-          <div className="hidden duration-700 ease-in-out" data-carousel-item>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full h-full">
-              {/* Картка фільму 1 */}
-              <div className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                <img
-                  src="/dunePartTwo.jpg"
-                  alt="Постер фільму Дюна: Частина друга"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a
-                    href="#"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          {movieChunks.map((chunk, index) => (
+            <div
+              key={index}
+              className="hidden duration-700 ease-in-out"
+              data-carousel-item
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full h-full">
+                {chunk.map((movie) => (
+                  <div
+                    key={movie.id}
+                    className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
                   >
-                    Детальніше
-                  </a>
-                </div>
-              </div>
-              {/* Картка фільму 2 */}
-              <div className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                <img
-                  src="/Oppenheimer.jpg"
-                  alt="Постер фільму Оппенгеймер"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a
-                    href="#"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Детальніше
-                  </a>
-                </div>
-              </div>
-              {/* Картка фільму 3 */}
-              <div className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                <img
-                  src="/The Shawshank Redemption.jpg"
-                  alt="Постер фільму Втеча з Шоушенка"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a
-                    href="#"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Детальніше
-                  </a>
-                </div>
+                    <img
+                      src={movie.poster_url}
+                      alt={`Постер фільму ${movie.title}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Link
+                        to={`/movie/${movie.id}`}
+                        className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                      >
+                        Детальніше
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-          {/* Slide/Page 2 */}
-          <div className="hidden duration-700 ease-in-out" data-carousel-item>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full h-full">
-              {/* Картка фільму 4 */}
-              <div className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                <img
-                  src="/Interstellar.jpg"
-                  alt="Постер фільму Інтерстеллар"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a
-                    href="#"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Детальніше
-                  </a>
-                </div>
-              </div>
-              {/* Картка фільму 5 */}
-              <div className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                <img
-                  src="/dunePartTwo.jpg"
-                  alt="Постер фільму Дюна: Частина друга"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a
-                    href="#"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Детальніше
-                  </a>
-                </div>
-              </div>
-              {/* Картка фільму 6 */}
-              <div className="group relative rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                <img
-                  src="/Oppenheimer.jpg"
-                  alt="Постер фільму Оппенгеймер"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <a
-                    href="#"
-                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                  >
-                    Детальніше
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-        {/* Slider indicators */}
+
         <div className="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
-          <button
-            type="button"
-            className="w-3 h-3 rounded-full"
-            aria-current="true"
-            aria-label="Slide 1"
-            data-carousel-slide-to="0"
-          ></button>
-          <button
-            type="button"
-            className="w-3 h-3 rounded-full"
-            aria-current="false"
-            aria-label="Slide 2"
-            data-carousel-slide-to="1"
-          ></button>
+          {movieChunks.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              className="w-3 h-3 rounded-full"
+              aria-current={index === 0 ? "true" : "false"}
+              aria-label={`Slide ${index + 1}`}
+              data-carousel-slide-to={index}
+            ></button>
+          ))}
         </div>
-        {/* Slider controls */}
+
         <button
           type="button"
           className="absolute top-0 start-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
