@@ -29,11 +29,14 @@ async function startServer() {
 
     const authRoutes = require("./routes/auth")(dbPool);
     const bookingRoutes = require("./routes/booking")(dbPool, redisClient);
+    const movieRoutes = require("./routes/movies")(dbPool);
 
     // маршрути з auth.js будуть доступні за префіксом /api/auth
     app.use("/api/auth", authRoutes);
     // маршрути з booking.js - за префіксом /api/booking
     app.use("/api/booking", bookingRoutes);
+    //маршути з movie.js
+    app.use("/api/movies", movieRoutes);
 
     app.listen(PORT, () => {
       console.log(`Сервер успішно запущено на порті ${PORT}`);
