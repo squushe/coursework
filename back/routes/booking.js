@@ -31,18 +31,14 @@ module.exports = function (dbPool, redisClient) {
         const seatKey = `screening:${screeningId}:seat:${seat.row}-${seat.seat}`;
         const reservedByUserId = await redisClient.get(seatKey);
         if (reservedByUserId === null) {
-          return res
-            .status(400)
-            .json({
-              message: `Час бронювання для місця ${seat.row}-${seat.seat} вичерпався.`,
-            });
+          return res.status(400).json({
+            message: `Час бронювання для місця ${seat.row}-${seat.seat} вичерпався.`,
+          });
         }
         if (parseInt(reservedByUserId) !== userId) {
-          return res
-            .status(403)
-            .json({
-              message: "Помилка: ви не можете купити чуже зарезервоване місце.",
-            });
+          return res.status(403).json({
+            message: "Помилка: ви не можете купити чуже зарезервоване місце.",
+          });
         }
       }
       const connection = await dbPool.getConnection();
@@ -50,7 +46,7 @@ module.exports = function (dbPool, redisClient) {
         await connection.beginTransaction();
         for (const seat of seats) {
           await connection.execute(
-            "INSERT INTO tickets (session_id, user_id, row_number, seat_number, status, booking_time) VALUES (?, ?, ?, ?, 'paid', NOW())",
+            "INSERT INTO tickets (`session_id`, `user_id`, `row_number`, `seat_number`, `status`, `booking_time`) VALUES (?, ?, ?, ?, 'paid', NOW())",
             [screeningId, userId, seat.row, seat.seat]
           );
         }

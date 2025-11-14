@@ -10,9 +10,7 @@ module.exports = function (dbPool) {
       res.status(200).json(movies);
     } catch (error) {
       console.error("Помилка при отриманні фільмів:", error);
-      res
-        .status(500)
-        .json({ message: "Помилка на сервері при отриманні фільмів." });
+      res.status(500).json({ message: "Помилка на сервері." });
     }
   });
 
@@ -31,14 +29,17 @@ module.exports = function (dbPool) {
       }
 
       const [actors] = await dbPool.execute(
-        `SELECT a.id, a.name, a.photo_url 
-         FROM actors a
-         JOIN movie_actors ma ON a.id = ma.actor_id
-         WHERE ma.movie_id = ?`,
+        `SELECT a.id, a.name, a.photo_url FROM actors a JOIN movie_actors ma ON a.id = ma.actor_id WHERE ma.movie_id = ?`,
+        [movieId]
+      );
+
+      const [sessions] = await dbPool.execute(
+        "SELECT * FROM sessions WHERE movie_id = ? AND start_time > NOW() ORDER BY start_time ASC",
         [movieId]
       );
 
       movie.actors = actors;
+      movie.sessions = sessions;
 
       res.status(200).json(movie);
     } catch (error) {

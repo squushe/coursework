@@ -1,174 +1,199 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  getSessionById,
+  reserveSeat,
+  confirmPurchase,
+} from "../components/api";
 
-const movieInfo = {
-  title: "Дюна: Частина друга",
-};
-
-const availableSessions = [
-  { date: "2025-10-20", times: ["14:00", "17:00", "20:00"] },
-  { date: "2025-10-21", times: ["15:30", "18:30", "21:30"] },
-  { date: "2025-10-22", times: ["19:00", "22:00"] },
-];
-
-const TICKET_PRICE = 180;
+const formatTime = (dateString) =>
+  new Date(dateString).toLocaleTimeString("uk-UA", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+const formatDate = (dateString) =>
+  new Date(dateString).toLocaleDateString("uk-UA", {
+    day: "numeric",
+    month: "long",
+  });
 
 function BookingPage() {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [ticketCount, setTicketCount] = useState(1);
+  const { screeningId } = useParams();
+  const navigate = useNavigate();
+  const userId = 1; // TODO: Отримати ID залогіненого користувача
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-    setSelectedTime(null);
-    setTicketCount(1);
+  const [sessionDetails, setSessionDetails] = useState(null);
+  const [seats, setSeats] = useState([]);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const loadSessionData = async () => {
+      try {
+        const data = await getSessionById(screeningId);
+        setSessionDetails(data);
+
+        const hallLayout = [];
+        for (let row = 1; row <= 8; row++) {
+          for (let seat = 1; seat <= 12; seat++) {
+            // TODO: Відмічати зайняті місця (data.takenSeats)
+            hallLayout.push({ row, seat, status: "free" });
+          }
+        }
+        setSeats(hallLayout);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSessionData();
+  }, [screeningId]);
+
+  const handleSeatClick = async (row, seat) => {
+    const seatKey = `${row}-${seat}`;
+    const isSelected = selectedSeats.some(
+      (s) => s.row === row && s.seat === seat
+    );
+    setMessage("");
+
+    if (isSelected) {
+      // TODO: Реалізувати логіку зняття резервації (DELETE запит на бекенд)
+      setSelectedSeats(
+        selectedSeats.filter((s) => !(s.row === row && s.seat === seat))
+      );
+    } else {
+      try {
+        const result = await reserveSeat({ screeningId, row, seat, userId });
+        if (result && result.message.includes("зарезервовано")) {
+          setSelectedSeats([...selectedSeats, { row, seat }]);
+        } else {
+          setMessage(result.message || "Не вдалося забронювати місце.");
+        }
+      } catch (error) {
+        setMessage(error.message);
+      }
+    }
   };
 
-  const handleTimeSelect = (time) => {
-    setSelectedTime(time);
-    setTicketCount(1);
-  };
-
-  const handleTicketCountChange = (event) => {
-    const count = parseInt(event.target.value, 10);
-    setTicketCount(count >= 1 ? count : 1);
-  };
-
-  const handleBookingConfirm = () => {
-    if (!selectedDate || !selectedTime || ticketCount < 1) {
-      alert("Будь ласка, заповніть усі поля.");
+  const handleConfirm = async () => {
+    if (selectedSeats.length === 0) {
+      setMessage("Будь ласка, оберіть хоча б одне місце.");
       return;
     }
-    const bookingDetails = {
-      movie: movieInfo.title,
-      date: selectedDate,
-      time: selectedTime,
-      tickets: ticketCount,
-      totalPrice: ticketCount * TICKET_PRICE,
-    };
-    alert(
-      `Ви успішно забронювали квитки!\n\nДеталі:\nФільм: ${bookingDetails.movie}\nДата: ${bookingDetails.date}\nЧас: ${bookingDetails.time}\nКількість квитків: ${bookingDetails.tickets}\nСума: ${bookingDetails.totalPrice} грн`
-    );
+
+    try {
+      const result = await confirmPurchase({
+        screeningId,
+        seats: selectedSeats,
+        userId,
+      });
+      setMessage(result.message);
+      setTimeout(() => {
+        navigate("/confirmation");
+      }, 2000);
+    } catch (error) {
+      setMessage(error.message);
+    }
   };
 
+  const getSeatClass = (seat) => {
+    const isSelected = selectedSeats.some(
+      (s) => s.row === seat.row && s.seat === seat.seat
+    );
+    if (isSelected) return "bg-yellow-500 hover:bg-yellow-600";
+    if (seat.status === "taken") return "bg-red-700 cursor-not-allowed";
+    return "bg-blue-500 hover:bg-blue-600";
+  };
+
+  if (isLoading)
+    return (
+      <div className="text-center p-10 text-white">Завантаження сеансу...</div>
+    );
+  if (error)
+    return (
+      <div className="text-center p-10 text-red-500">Помилка: {error}</div>
+    );
+  if (!sessionDetails)
+    return (
+      <div className="text-center p-10 text-white">Сеанс не знайдено.</div>
+    );
+
   return (
-    <div
-      style={{
-        padding: "20px",
-        color: "black",
-        background: "white",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <h1>Бронювання квитків на фільм: {movieInfo.title}</h1>
-      <hr style={{ margin: "20px 0" }} />
-
-      <section>
-        <h2>Крок 1: Виберіть дату</h2>
-        <div style={{ display: "flex", gap: "10px" }}>
-          {availableSessions.map((session) => (
-            <button
-              key={session.date}
-              onClick={() => handleDateSelect(session.date)}
-              style={{
-                padding: "10px",
-                fontSize: "16px",
-                cursor: "pointer",
-                border:
-                  selectedDate === session.date
-                    ? "2px solid blue"
-                    : "1px solid gray",
-              }}
-            >
-              {session.date}
-            </button>
-          ))}
+    <div className="container mx-auto p-4 md:p-8 text-white">
+      <div className="bg-gray-800 rounded-lg p-6 mb-8 flex flex-col sm:flex-row items-center gap-6">
+        <img
+          src={sessionDetails.movie_poster}
+          alt="Постер"
+          className="w-24 rounded hidden sm:block"
+        />
+        <div>
+          <h1 className="text-3xl font-bold">{sessionDetails.movie_title}</h1>
+          <p className="text-gray-300">
+            {sessionDetails.hall_name} • {formatDate(sessionDetails.start_time)}{" "}
+            o {formatTime(sessionDetails.start_time)}
+          </p>
         </div>
-      </section>
+      </div>
 
-      {selectedDate && (
-        <section style={{ marginTop: "30px" }}>
-          <h2>Крок 2: Виберіть час сеансу</h2>
-          <div style={{ display: "flex", gap: "10px" }}>
-            {availableSessions
-              .find((s) => s.date === selectedDate)
-              .times.map((time) => (
-                <button
-                  key={time}
-                  onClick={() => handleTimeSelect(time)}
-                  style={{
-                    padding: "10px",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    border:
-                      selectedTime === time
-                        ? "2px solid blue"
-                        : "1px solid gray",
-                  }}
-                >
-                  {time}
-                </button>
-              ))}
-          </div>
-        </section>
-      )}
+      <h2 className="text-2xl font-bold text-center mb-8">Оберіть місця</h2>
+      <div
+        className="bg-white w-full h-2 mb-8 rounded opacity-50"
+        style={{ boxShadow: "0 0 20px 5px rgba(255,255,255,0.5)" }}
+      >
+        <p className="text-center text-gray-900 -mt-6 font-bold">ЕКРАН</p>
+      </div>
 
-      {selectedTime && (
-        <section style={{ marginTop: "30px" }}>
-          <h2>Крок 3: Вкажіть кількість квитків</h2>
-          <label
-            htmlFor="ticket-count"
-            style={{ marginRight: "10px", fontSize: "18px" }}
-          >
-            Кількість:
-          </label>
-          <input
-            id="ticket-count"
-            type="number"
-            min="1"
-            value={ticketCount}
-            onChange={handleTicketCountChange}
-            style={{ padding: "8px", fontSize: "18px", width: "80px" }}
-          />
-        </section>
-      )}
-
-      {selectedTime && (
-        <section
-          style={{
-            marginTop: "40px",
-            borderTop: "1px solid #ccc",
-            paddingTop: "20px",
-          }}
-        >
-          <h2>Ваше замовлення</h2>
-          <p>
-            Дата: <strong>{selectedDate}</strong>
-          </p>
-          <p>
-            Час: <strong>{selectedTime}</strong>
-          </p>
-          <p>
-            Кількість квитків: <strong>{ticketCount}</strong>
-          </p>
-          <p style={{ fontSize: "22px" }}>
-            Загальна вартість: <strong>{ticketCount * TICKET_PRICE} грн</strong>
-          </p>
+      <div className="grid grid-cols-12 gap-2 max-w-2xl mx-auto">
+        {seats.map((seat, index) => (
           <button
-            onClick={handleBookingConfirm}
-            style={{
-              padding: "15px 25px",
-              fontSize: "18px",
-              background: "green",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              marginTop: "10px",
-            }}
+            key={index}
+            onClick={() => handleSeatClick(seat.row, seat.seat)}
+            disabled={seat.status !== "free"}
+            className={`w-full aspect-square rounded text-xs sm:text-sm transition-colors flex items-center justify-center ${getSeatClass(
+              seat
+            )}`}
           >
-            Забронювати
+            {seat.seat}
           </button>
-        </section>
-      )}
+        ))}
+      </div>
+
+      <div className="mt-8 text-center max-w-2xl mx-auto">
+        <div className="bg-gray-800 p-4 rounded-lg min-h-[100px] flex flex-col justify-center">
+          {selectedSeats.length > 0 ? (
+            <>
+              <p className="text-lg mb-2">
+                Обрані місця:{" "}
+                {selectedSeats.map((s) => `Р${s.row}М${s.seat}`).join(", ")}
+              </p>
+              <p className="font-bold text-xl">
+                До сплати: {selectedSeats.length * sessionDetails.price} грн
+              </p>
+            </>
+          ) : (
+            <p className="text-gray-400">Оберіть місця на схемі залу</p>
+          )}
+        </div>
+        {message && (
+          <p
+            className={`my-4 font-semibold ${
+              message.includes("успішно") ? "text-green-400" : "text-yellow-400"
+            }`}
+          >
+            {message}
+          </p>
+        )}
+        <button
+          onClick={handleConfirm}
+          disabled={selectedSeats.length === 0}
+          className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+        >
+          Підтвердити покупку
+        </button>
+      </div>
     </div>
   );
 }

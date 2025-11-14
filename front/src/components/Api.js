@@ -78,3 +78,52 @@ export const getMovieById = async (movieId) => {
     throw error;
   }
 };
+
+export const getSessionById = async (sessionId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}`);
+    if (!response.ok) {
+      throw new Error("Не вдалося завантажити дані сеансу");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("API Error (getSessionById):", error);
+    throw error;
+  }
+};
+
+export const reserveSeat = async (data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/booking/reserve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Помилка резервування");
+    }
+    return result;
+  } catch (error) {
+    console.error("API Error (reserveSeat):", error);
+    throw error;
+  }
+};
+
+export const confirmPurchase = async (data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/booking/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "Помилка підтвердження покупки");
+    }
+    return result;
+  } catch (error) {
+    console.error("API Error (confirmPurchase):", error);
+    throw error;
+  }
+};
