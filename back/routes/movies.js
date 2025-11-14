@@ -4,8 +4,9 @@ const router = express.Router();
 module.exports = function (dbPool) {
   router.get("/", async (req, res) => {
     try {
-      const [movies] = await dbPool.execute("SELECT * FROM movies");
-
+      const [movies] = await dbPool.execute(
+        "SELECT id, title, poster_url, genre FROM movies"
+      );
       res.status(200).json(movies);
     } catch (error) {
       console.error("Помилка при отриманні фільмів:", error);
@@ -19,14 +20,25 @@ module.exports = function (dbPool) {
     try {
       const movieId = req.params.id;
 
-      const [rows] = await dbPool.execute("SELECT * FROM movies WHERE id = ?", [
-        movieId,
-      ]);
-      const movie = rows[0];
+      const [movieRows] = await dbPool.execute(
+        "SELECT * FROM movies WHERE id = ?",
+        [movieId]
+      );
+      const movie = movieRows[0];
 
       if (!movie) {
         return res.status(404).json({ message: "Фільм не знайдено." });
       }
+
+      const [actors] = await dbPool.execute(
+        `SELECT a.id, a.name, a.photo_url 
+         FROM actors a
+         JOIN movie_actors ma ON a.id = ma.actor_id
+         WHERE ma.movie_id = ?`,
+        [movieId]
+      );
+
+      movie.actors = actors;
 
       res.status(200).json(movie);
     } catch (error) {
