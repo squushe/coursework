@@ -112,9 +112,12 @@ function BookingPage() {
         userId,
       });
       setMessage(result.message);
-      setTimeout(() => {
-        navigate("/confirmation");
-      }, 2000);
+
+      if (result.ticketIds && result.ticketIds.length > 0) {
+        setTimeout(() => {
+          navigate(`/confirmation/${result.ticketIds[0]}`);
+        }, 1000);
+      }
     } catch (error) {
       setMessage(error.message);
     }

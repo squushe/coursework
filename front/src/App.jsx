@@ -35,7 +35,10 @@ function App() {
           <Route path="/my-tickets" element={<MyTicketsPage />} />
 
           {/* Сторінка підтвердження після успішної покупки */}
-          <Route path="/confirmation" element={<TicketConfirmationPage />} />
+          <Route
+            path="/confirmation/:ticketId"
+            element={<TicketConfirmationPage />}
+          />
         </Routes>
       </main>
 

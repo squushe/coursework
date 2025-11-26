@@ -41,14 +41,18 @@ module.exports = function (dbPool, redisClient) {
           });
         }
       }
+
       const connection = await dbPool.getConnection();
+      let insertedIds = [];
+
       try {
         await connection.beginTransaction();
         for (const seat of seats) {
-          await connection.execute(
-            "INSERT INTO tickets (`session_id`, `user_id`, `row_number`, `seat_number`, `status`, `booking_time`) VALUES (?, ?, ?, ?, 'paid', NOW())",
+          const [result] = await connection.execute(
+            "INSERT INTO tickets (`session_id`, `user_id`, `row_number`, `seat_number`) VALUES (?, ?, ?, ?)",
             [screeningId, userId, seat.row, seat.seat]
           );
+          insertedIds.push(result.insertId);
         }
         await connection.commit();
       } catch (dbError) {
@@ -57,11 +61,16 @@ module.exports = function (dbPool, redisClient) {
       } finally {
         connection.release();
       }
+
       for (const seat of seats) {
         const seatKey = `screening:${screeningId}:seat:${seat.row}-${seat.seat}`;
         await redisClient.del(seatKey);
       }
-      res.status(201).json({ message: "Квитки успішно придбано!" });
+
+      res.status(201).json({
+        message: "Квитки успішно придбано!",
+        ticketIds: insertedIds,
+      });
     } catch (error) {
       console.error("Помилка при підтвердженні покупки:", error);
       res
