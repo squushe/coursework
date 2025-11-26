@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   getSessionById,
   reserveSeat,
@@ -20,7 +20,7 @@ const formatDate = (dateString) =>
 function BookingPage() {
   const { screeningId } = useParams();
   const navigate = useNavigate();
-  const userId = 1; // TODO: Отримати ID залогіненого користувача
+  const userId = parseInt(localStorage.getItem("userId")) || null;
 
   const [sessionDetails, setSessionDetails] = useState(null);
   const [seats, setSeats] = useState([]);
@@ -32,15 +32,34 @@ function BookingPage() {
   useEffect(() => {
     const loadSessionData = async () => {
       try {
+        if (!userId) {
+          throw new Error("Будь ласка, увійдіть, щоб забронювати квитки.");
+        }
+
         const data = await getSessionById(screeningId);
         setSessionDetails(data);
 
         const hallLayout = [];
-        for (let row = 1; row <= 8; row++) {
-          for (let seat = 1; seat <= 12; seat++) {
-            // TODO: Відмічати зайняті місця (data.takenSeats)
-            hallLayout.push({ row, seat, status: "free" });
+        const rows = 8;
+        const seatsPerRow = 12;
+
+        for (let row = 1; row <= rows; row++) {
+          const rowSeats = [];
+          for (let seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
+            const isTaken = data.takenSeats.some(
+              (s) => s.row_number === row && s.seat_number === seatNum
+            );
+            const isReserved = data.reservedSeats.some(
+              (s) => s.row_number === row && s.seat_number === seatNum
+            );
+
+            let status = "free";
+            if (isTaken) status = "taken";
+            if (isReserved) status = "reserved";
+
+            rowSeats.push({ row, seat: seatNum, status });
           }
+          hallLayout.push(rowSeats);
         }
         setSeats(hallLayout);
       } catch (err) {
@@ -50,25 +69,27 @@ function BookingPage() {
       }
     };
     loadSessionData();
-  }, [screeningId]);
+  }, [screeningId, userId]);
 
-  const handleSeatClick = async (row, seat) => {
-    const seatKey = `${row}-${seat}`;
+  const handleSeatClick = async (row, seat, status) => {
+    if (status === "taken" || status === "reserved") return;
+
+    const seatIdentifier = { row, seat };
     const isSelected = selectedSeats.some(
       (s) => s.row === row && s.seat === seat
     );
     setMessage("");
 
     if (isSelected) {
-      // TODO: Реалізувати логіку зняття резервації (DELETE запит на бекенд)
       setSelectedSeats(
         selectedSeats.filter((s) => !(s.row === row && s.seat === seat))
       );
+      // TODO: реалізувати зняття резервації з Redis (DELETE запит на бекенд)
     } else {
       try {
         const result = await reserveSeat({ screeningId, row, seat, userId });
         if (result && result.message.includes("зарезервовано")) {
-          setSelectedSeats([...selectedSeats, { row, seat }]);
+          setSelectedSeats([...selectedSeats, seatIdentifier]);
         } else {
           setMessage(result.message || "Не вдалося забронювати місце.");
         }
@@ -99,23 +120,36 @@ function BookingPage() {
     }
   };
 
-  const getSeatClass = (seat) => {
+  const getSeatClass = (status, seat) => {
     const isSelected = selectedSeats.some(
       (s) => s.row === seat.row && s.seat === seat.seat
     );
-    if (isSelected) return "bg-yellow-500 hover:bg-yellow-600";
-    if (seat.status === "taken") return "bg-red-700 cursor-not-allowed";
-    return "bg-blue-500 hover:bg-blue-600";
+    if (isSelected)
+      return "bg-yellow-500 hover:bg-yellow-600 border-yellow-400";
+    if (status === "taken" || status === "reserved")
+      return "bg-gray-600 cursor-not-allowed border-gray-700";
+    return "bg-blue-500 hover:bg-blue-600 border-blue-400";
   };
 
   if (isLoading)
     return (
       <div className="text-center p-10 text-white">Завантаження сеансу...</div>
     );
-  if (error)
+
+  if (error) {
     return (
-      <div className="text-center p-10 text-red-500">Помилка: {error}</div>
+      <div className="text-center py-20 bg-gray-800 rounded-lg text-white">
+        <h2 className="text-2xl font-semibold mb-4 text-yellow-400">{error}</h2>
+        <Link
+          to="/auth"
+          className="bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-5 py-2.5"
+        >
+          Увійти
+        </Link>
+      </div>
     );
+  }
+
   if (!sessionDetails)
     return (
       <div className="text-center p-10 text-white">Сеанс не знайдено.</div>
@@ -138,34 +172,77 @@ function BookingPage() {
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-center mb-8">Оберіть місця</h2>
-      <div
-        className="bg-white w-full h-2 mb-8 rounded opacity-50"
-        style={{ boxShadow: "0 0 20px 5px rgba(255,255,255,0.5)" }}
-      >
-        <p className="text-center text-gray-900 -mt-6 font-bold">ЕКРАН</p>
+      <h2 className="text-2xl font-bold text-center mb-2">Оберіть місця</h2>
+
+      <div className="relative h-12 mb-12 flex justify-center items-center">
+        <div
+          className="w-full max-w-4xl h-24 bg-gradient-to-b from-white/50 to-transparent"
+          style={{
+            borderBottomLeftRadius: "50%",
+            borderBottomRightRadius: "50%",
+            transform: "perspective(100px) rotateX(-30deg)",
+            boxShadow: "0 0 40px 10px rgba(255,255,255,0.3)",
+          }}
+        ></div>
+        <p className="absolute bottom-0 text-gray-400 tracking-[0.5em]">
+          ЕКРАН
+        </p>
       </div>
 
-      <div className="grid grid-cols-12 gap-2 max-w-2xl mx-auto">
-        {seats.map((seat, index) => (
-          <button
-            key={index}
-            onClick={() => handleSeatClick(seat.row, seat.seat)}
-            disabled={seat.status !== "free"}
-            className={`w-full aspect-square rounded text-xs sm:text-sm transition-colors flex items-center justify-center ${getSeatClass(
-              seat
-            )}`}
-          >
-            {seat.seat}
-          </button>
-        ))}
+      <div className="flex justify-center">
+        <div className="flex flex-col gap-2">
+          {seats.map((rowSeats, rowIndex) => (
+            <div key={rowIndex} className="flex items-center gap-2 sm:gap-4">
+              <div className="w-6 text-center text-gray-400 font-semibold">
+                {rowIndex + 1}
+              </div>
+              <div className="flex gap-1 sm:gap-2">
+                {rowSeats.map((seat) => (
+                  <button
+                    key={`${seat.row}-${seat.seat}`}
+                    onClick={() =>
+                      handleSeatClick(seat.row, seat.seat, seat.status)
+                    }
+                    disabled={
+                      seat.status !== "free" &&
+                      !selectedSeats.some(
+                        (s) => s.row === seat.row && s.seat === seat.seat
+                      )
+                    }
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded text-xs transition-colors flex items-center justify-center border-b-4 ${getSeatClass(
+                      seat.status,
+                      seat
+                    )}`}
+                  >
+                    {seat.seat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-center flex-wrap gap-4 sm:gap-6 mt-8">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-blue-500 border-b-4 border-blue-400"></div>
+          <span className="text-sm">Вільні</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-yellow-500 border-b-4 border-yellow-400"></div>
+          <span className="text-sm">Обрані</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-gray-600 border-b-4 border-gray-700"></div>
+          <span className="text-sm">Зайняті</span>
+        </div>
       </div>
 
       <div className="mt-8 text-center max-w-2xl mx-auto">
         <div className="bg-gray-800 p-4 rounded-lg min-h-[100px] flex flex-col justify-center">
           {selectedSeats.length > 0 ? (
             <>
-              <p className="text-lg mb-2">
+              <p className="text-base sm:text-lg mb-2">
                 Обрані місця:{" "}
                 {selectedSeats.map((s) => `Р${s.row}М${s.seat}`).join(", ")}
               </p>
@@ -188,7 +265,7 @@ function BookingPage() {
         )}
         <button
           onClick={handleConfirm}
-          disabled={selectedSeats.length === 0}
+          disabled={selectedSeats.length === 0 || isLoading}
           className="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
         >
           Підтвердити покупку

@@ -30,16 +30,12 @@ async function startServer() {
     const authRoutes = require("./routes/auth")(dbPool);
     const bookingRoutes = require("./routes/booking")(dbPool, redisClient);
     const movieRoutes = require("./routes/movies")(dbPool);
-    const sessionRoutes = require("./routes/sessions")(dbPool);
+    const sessionRoutes = require("./routes/sessions")(dbPool, redisClient);
     const ticketRoutes = require("./routes/tickets")(dbPool);
 
-    // маршрути з auth.js будуть доступні за префіксом /api/auth
     app.use("/api/auth", authRoutes);
-    // маршрути з booking.js - за префіксом /api/booking
     app.use("/api/booking", bookingRoutes);
-    //маршути з movie.js
     app.use("/api/movies", movieRoutes);
-    //маршути з sessions
     app.use("/api/sessions", sessionRoutes);
     app.use("/api/tickets", ticketRoutes);
 
