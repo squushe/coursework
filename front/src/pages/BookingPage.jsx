@@ -4,7 +4,7 @@ import {
   getSessionById,
   reserveSeat,
   confirmPurchase,
-} from "../components/api";
+} from "../components/Api";
 
 const formatTime = (dateString) =>
   new Date(dateString).toLocaleTimeString("uk-UA", {

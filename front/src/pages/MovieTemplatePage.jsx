@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getMovieById } from "../components/api";
+import { getMovieById } from "../components/Api";
 
 const PlayIcon = () => (
   <svg

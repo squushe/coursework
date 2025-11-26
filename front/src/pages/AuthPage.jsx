@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { registerUser, loginUser } from "../components/Api";
 
 const UserIcon = () => (
@@ -59,6 +60,7 @@ function AuthPage() {
   });
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -88,9 +90,15 @@ function AuthPage() {
         };
         const data = await loginUser(credentials);
 
-        console.log("Успішний вхід:", data);
-        setMessage(data.message);
-        // TODO: Зберегти дані користувача (data) і перенаправити на головну сторінку
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("userId", data.userId);
+          setMessage(data.message);
+
+          setTimeout(() => {
+            navigate("/");
+          }, 1000);
+        }
       } else {
         if (!formData.name || !formData.email || !formData.password) {
           throw new Error("Будь ласка, заповніть усі поля для реєстрації.");
@@ -98,7 +106,6 @@ function AuthPage() {
 
         const data = await registerUser(formData);
 
-        console.log("Успішна реєстрація:", data);
         setMessage("Реєстрація успішна! Тепер ви можете увійти.");
         setTimeout(() => {
           switchAuthMode();

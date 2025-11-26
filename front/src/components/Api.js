@@ -127,3 +127,27 @@ export const confirmPurchase = async (data) => {
     throw error;
   }
 };
+
+export const getMyTickets = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Ви не авторизовані.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/tickets`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Не вдалося завантажити квитки.");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("API Error (getMyTickets):", error);
+    throw error;
+  }
+};
