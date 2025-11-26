@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
 
 module.exports = function (dbPool) {
   router.post("/register", async (req, res) => {
@@ -38,20 +39,28 @@ module.exports = function (dbPool) {
           .status(400)
           .json({ message: "Будь ласка, заповніть усі поля." });
       }
+
       const [rows] = await dbPool.execute(
         "SELECT * FROM users WHERE email = ?",
         [email]
       );
       const user = rows[0];
+
       if (!user || user.password !== password) {
         return res
           .status(401)
           .json({ message: "Неправильний email або пароль." });
       }
+
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        "your_super_secret_key_for_jwt",
+        { expiresIn: "1h" }
+      );
+
       res.status(200).json({
+        token: token,
         userId: user.id,
-        name: user.name,
-        email: user.email,
         message: "Вхід успішний!",
       });
     } catch (error) {
