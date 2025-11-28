@@ -19,27 +19,31 @@ const PlayIcon = () => (
 
 const TrailerModal = ({ trailerId, onClose }) => (
   <div
-    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+    className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4" // Зробили фон темнішим і додали відступи
     onClick={onClose}
   >
     <div
-      className="bg-black p-2 rounded-lg relative w-full max-w-4xl"
+      className="bg-black rounded-lg relative w-full max-w-6xl border border-gray-700" // Збільшили max-w-4xl до max-w-6xl
       onClick={(e) => e.stopPropagation()}
     >
       <button
         onClick={onClose}
-        className="absolute -top-10 right-0 text-white text-3xl"
+        className="absolute -top-10 -right-2 text-white text-4xl hover:text-gray-300 focus:outline-none" // Зробили кнопку закриття більшою та помітнішою
       >
         &times;
       </button>
-      <div className="aspect-w-16 aspect-h-9">
+      {/* 
+         aspect-video автоматично робить блок із співвідношенням 16:9.
+         Якщо у вас не працює, перевірте, чи встановлено плагін або використовуйте стиль style={{ aspectRatio: '16/9' }}
+      */}
+      <div className="w-full" style={{ aspectRatio: "16/9" }}>
         <iframe
-          src={`https://www.youtube.com/embed/${trailerId}?autoplay=1`}
+          src={`https://www.youtube.com/embed/${trailerId}`} // Прибрали зайві параметри для надійності
           title="YouTube video player"
+          className="w-full h-full rounded-lg"
           frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
-          className="w-full h-full"
         ></iframe>
       </div>
     </div>
@@ -206,7 +210,7 @@ function MovieTemplatePage() {
 
       {isTrailerOpen && (
         <TrailerModal
-          trailerId={"dQw4w9WgXcQ"}
+          trailerId={movie.trailer_id}
           onClose={() => setIsTrailerOpen(false)}
         />
       )}
