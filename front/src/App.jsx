@@ -1,7 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
-// 2. Імпортуємо всі ваші сторінки (pages)
 import HomePage from "./pages/HomePage";
 import MovieTemplatePage from "./pages/MovieTemplatePage";
 import BookingPage from "./pages/BookingPage";
