@@ -1,21 +1,25 @@
+require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
 const redis = require("redis");
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
 const dbPool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "BvUhM||2r21>",
-  database: "cinemabooking",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
 });
-const redisClient = redis.createClient({});
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL,
+});
 
 async function startServer() {
   try {

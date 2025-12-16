@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
       throw new Error("Токен не надано");
     }
 
-    const decodedToken = jwt.verify(token, "your_super_secret_key_for_jwt");
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
     req.userData = { userId: decodedToken.userId };
 

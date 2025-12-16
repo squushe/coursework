@@ -54,7 +54,7 @@ module.exports = function (dbPool) {
 
       const token = jwt.sign(
         { userId: user.id, email: user.email },
-        "your_super_secret_key_for_jwt",
+        process.env.JWT_SECRET,
         { expiresIn: "1h" }
       );
 
